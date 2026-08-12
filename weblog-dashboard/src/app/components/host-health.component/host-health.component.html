@@ -1,0 +1,170 @@
+<div class="host-health-page">
+
+  <!-- Header Banner -->
+  <div class="page-header">
+    <div class="page-title">
+      <div class="page-title__icon">🖥️</div>
+      <div>
+        <h1>Host Infrastructure Health</h1>
+        <p>Real-time cluster hardware metrics, CPU load, memory usage & node status</p>
+      </div>
+    </div>
+
+    <div class="page-actions">
+      <button class="refresh-btn" (click)="loadHostHealth()" [disabled]="loading">
+        <span class="refresh-icon" [class.spinning]="loading">↻</span>
+        <span>REFRESH METRICS</span>
+      </button>
+      <div class="sync-tag">LAST SYNC: {{ lastUpdated | date:'HH:mm:ss' }}</div>
+    </div>
+  </div>
+
+  <!-- KPI Hardware Metric Summary Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-card--primary">
+      <div class="kpi-card__label">TOTAL NODES</div>
+      <div class="kpi-card__value">{{ totalNodes }}</div>
+      <div class="kpi-card__sub">ACTIVE CLUSTER SERVERS</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-card__label">AVG CPU LOAD</div>
+      <div class="kpi-card__value" [class.text-warn]="avgCpu > 70">{{ avgCpu }}%</div>
+      <div class="kpi-card__sub">CLUSTER WORKLOAD</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-card__label">AVG RAM MEMORY</div>
+      <div class="kpi-card__value" [class.text-warn]="avgRam > 80">{{ avgRam }}%</div>
+      <div class="kpi-card__sub">ALLOCATED MEMORY</div>
+    </div>
+
+    <div class="kpi-card" [class.kpi-card--danger]="highLoadCount > 0">
+      <div class="kpi-card__label">HIGH LOAD NODES</div>
+      <div class="kpi-card__value" [class.text-danger]="highLoadCount > 0">{{ highLoadCount }}</div>
+      <div class="kpi-card__sub">{{ highLoadCount > 0 ? 'ATTENTION REQUIRED' : 'ALL NODES STABLE' }}</div>
+    </div>
+  </div>
+
+  <!-- Filter & Search Toolbar -->
+  <div class="toolbar">
+    <div class="filter-group">
+      <button
+        class="filter-pill"
+        [class.filter-pill--active]="activeFilter === 'ALL'"
+        (click)="setFilter('ALL')"
+      >
+        ALL NODES ({{ totalNodes }})
+      </button>
+
+      <button
+        class="filter-pill filter-pill--danger"
+        [class.filter-pill--active]="activeFilter === 'HIGH LOAD'"
+        (click)="setFilter('HIGH LOAD')"
+      >
+        HIGH LOAD ({{ highLoadCount }})
+      </button>
+
+      <button
+        class="filter-pill filter-pill--green"
+        [class.filter-pill--active]="activeFilter === 'LIVE'"
+        (click)="setFilter('LIVE')"
+      >
+        LIVE ({{ liveCount }})
+      </button>
+    </div>
+
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        placeholder="Filter by node name (e.g. web-01)..."
+        [value]="searchQuery"
+        (input)="onSearch($event)"
+      />
+    </div>
+  </div>
+
+  <!-- Loading Radar State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="radar-spinner"></div>
+    <p>SAMPLING CLUSTER HARDWARE METRICS...</p>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error && !loading" class="error-banner">
+    <span>🚨 {{ error }}</span>
+    <button (click)="loadHostHealth()">RETRY</button>
+  </div>
+
+  <!-- Node Health Cards Grid -->
+  <div *ngIf="!loading && !error" class="nodes-grid">
+    <div class="node-card" *ngFor="let node of filteredHosts">
+
+      <div class="node-card__header">
+        <div class="node-identity">
+          <span class="node-badge">NODE</span>
+          <h3 class="node-name">{{ node.host }}</h3>
+        </div>
+
+        <span
+          class="status-chip"
+          [class.status-chip--high]="node.status === 'HIGH LOAD'"
+        >
+          <span class="chip-dot"></span>
+          {{ node.status }}
+        </span>
+      </div>
+
+      <div class="metrics-list">
+
+        <!-- CPU Metric -->
+        <div class="metric-item">
+          <div class="metric-head">
+            <span class="metric-name">CPU UTILIZATION</span>
+            <span class="metric-score" [class.text-danger]="node.cpuPercent > 80">{{ node.cpuPercent }}%</span>
+          </div>
+          <div class="meter-bg">
+            <div
+              class="meter-fill meter-fill--amber"
+              [style.width.%]="node.cpuPercent"
+              [class.meter-fill--danger]="node.cpuPercent > 80"
+            ></div>
+          </div>
+        </div>
+
+        <!-- RAM Metric -->
+        <div class="metric-item">
+          <div class="metric-head">
+            <span class="metric-name">RAM MEMORY ALLOCATION</span>
+            <span class="metric-score" [class.text-danger]="node.memoryPercent > 85">{{ node.memoryPercent }}%</span>
+          </div>
+          <div class="meter-bg">
+            <div
+              class="meter-fill meter-fill--cyan"
+              [style.width.%]="node.memoryPercent"
+              [class.meter-fill--danger]="node.memoryPercent > 85"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Disk Metric -->
+        <div class="metric-item">
+          <div class="metric-head">
+            <span class="metric-name">STORAGE DISK USAGE</span>
+            <span class="metric-score">{{ node.diskPercent }}%</span>
+          </div>
+          <div class="meter-bg">
+            <div
+              class="meter-fill meter-fill--green"
+              [style.width.%]="node.diskPercent"
+            ></div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</div>

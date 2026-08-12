@@ -1,0 +1,24 @@
+/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap');
+
+:root {
+  --bg-primary: #161b22;
+  --bg-panel: #1f2530;
+  --hairline: #2a3140;
+  --amber: #ffb000;
+  --cyan: #5eead4;
+  --danger: #f97066;
+  --text-primary: #e8e6df;
+  --text-muted: #7c8494;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }

@@ -1,0 +1,653 @@
+<div class="dashboard-shell" [attr.data-theme]="currentTheme">
+  <!-- ================= BACKGROUND VIDEO & OVERLAY ================= -->
+  <video *ngIf="videoBgEnabled" #bgVideo class="bg-video" autoplay muted [muted]="true" loop playsinline preload="metadata">
+    <source src="bg-video.webm" type="video/webm">
+    <source src="bg-video.mp4" type="video/mp4">
+  </video>
+  <div *ngIf="videoBgEnabled" class="video-overlay"></div>
+
+  <!-- ================= LEFT SIDEBAR NAVIGATION ================= -->
+  <nav class="sidebar" [class.sidebar--collapsed]="sidebarCollapsed">
+    <div class="sidebar-brand">
+      <div class="brand-mark">
+        <span class="brand-mark__pulse"></span>
+        <span class="brand-mark__icon">⌁</span>
+      </div>
+      <span class="sidebar-brand-name" *ngIf="!sidebarCollapsed">TELEMETRY</span>
+    </div>
+
+    <div class="sidebar-menu">
+      <button
+        class="nav-item"
+        [class.nav-item--active]="activeTab === 'overview'"
+        (click)="selectTab('overview')"
+        title="Overview Telemetry Dashboard"
+      >
+        <span class="nav-icon">📊</span>
+        <span class="nav-text" *ngIf="!sidebarCollapsed">OVERVIEW</span>
+      </button>
+
+      <button
+        class="nav-item"
+        [class.nav-item--active]="activeTab === 'infrastructure'"
+        (click)="selectTab('infrastructure')"
+        title="Host Infrastructure Health"
+      >
+        <span class="nav-icon">🖥️</span>
+        <span class="nav-text" *ngIf="!sidebarCollapsed">HOST HEALTH</span>
+      </button>
+    </div>
+
+    <button class="sidebar-collapse-btn" (click)="toggleSidebar()" title="Toggle Sidebar">
+      <span>{{ sidebarCollapsed ? '❯' : '❮' }}</span>
+    </button>
+  </nav>
+
+  <!-- ================= MAIN VIEWPORT CONTENT ================= -->
+  <div class="main-viewport" [class.main-viewport--expanded]="sidebarCollapsed">
+
+    <!-- Standalone Host Health Component View -->
+    <app-host-health *ngIf="activeTab === 'infrastructure'"></app-host-health>
+
+    <!-- Main Dashboard Overview View -->
+    <ng-container *ngIf="activeTab === 'overview'">
+
+      <!-- ================= HEADER ================= -->
+      <header class="dashboard-header">
+
+        <div class="brand">
+          <div class="brand-mark">
+            <span class="brand-mark__pulse"></span>
+            <span class="brand-mark__icon">⌁</span>
+          </div>
+
+          <div>
+            <div class="brand__title">
+              WEB LOG
+              <span>TELEMETRY</span>
+            </div>
+
+            <div class="brand__subtitle">
+              REAL-TIME APPLICATION OBSERVABILITY
+            </div>
+          </div>
+        </div>
+
+        <div class="system-info">
+
+          <button
+            class="theme-toggle-btn"
+            (click)="toggleVideoBg()"
+            [title]="'Turn Video Background ' + (videoBgEnabled ? 'OFF' : 'ON')"
+            type="button"
+          >
+            <span class="theme-toggle-btn__icon">{{ videoBgEnabled ? '🎬' : '🚫' }}</span>
+            <span class="theme-toggle-btn__text">{{ videoBgEnabled ? 'VIDEO: ON' : 'VIDEO: OFF' }}</span>
+          </button>
+
+          <div class="system-divider"></div>
+
+          <button
+            class="theme-toggle-btn"
+            (click)="toggleTheme()"
+            [title]="'Switch to ' + (currentTheme === 'dark' ? 'Light' : 'Dark') + ' Mode'"
+            type="button"
+          >
+            <span class="theme-toggle-btn__icon">{{ currentTheme === 'dark' ? '☀️' : '🌙' }}</span>
+            <span class="theme-toggle-btn__text">{{ currentTheme === 'dark' ? 'LIGHT MODE' : 'DARK MODE' }}</span>
+          </button>
+
+          <div class="system-divider"></div>
+
+          <div class="system-node">
+            <span class="system-node__label">SYSTEM</span>
+            <span class="system-node__value">KSC-WEB-01</span>
+          </div>
+
+          <div class="system-divider"></div>
+
+          <div
+            class="system-status"
+            [class.system-status--error]="error"
+          >
+            <span class="status-indicator"></span>
+
+            <div>
+              <span class="system-status__label">SYSTEM STATUS</span>
+              <span class="system-status__value">
+                {{ error ? 'LINK DOWN' : 'OPERATIONAL' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="live-indicator">
+            <span class="live-indicator__dot"></span>
+            LIVE
+          </div>
+
+        </div>
+
+      </header>
+
+
+  <!-- ================= LOADING ================= -->
+
+  <div class="loading-state" *ngIf="loading">
+
+    <div class="loading-state__icon">
+      <div class="loading-ring"></div>
+      <span>⌁</span>
+    </div>
+
+    <div class="loading-state__content">
+      <div class="loading-state__title">
+        INITIALIZING TELEMETRY
+      </div>
+
+      <div class="loading-state__message">
+        READING ACCESS_LOGS
+        <span class="dots">...</span>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ================= ERROR ================= -->
+
+  <div class="error-state" *ngIf="error">
+
+    <div class="error-state__icon">
+      !
+    </div>
+
+    <div>
+      <div class="error-state__title">
+        TELEMETRY CONNECTION FAILED
+      </div>
+
+      <div class="error-state__message">
+        {{ error }}
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ================= DASHBOARD ================= -->
+
+  <ng-container *ngIf="!loading && !error">
+
+    <!-- ================= TOP BAR ================= -->
+
+    <div class="dashboard-toolbar">
+
+      <div>
+        <div class="dashboard-toolbar__title">
+          SYSTEM OVERVIEW
+        </div>
+
+        <div class="dashboard-toolbar__subtitle">
+          HTTP ACCESS LOG ANALYTICS
+        </div>
+      </div>
+
+      <div class="sync-info">
+
+        <span class="sync-info__dot"></span>
+
+        <div>
+          <span class="sync-info__label">LAST SYNCHRONIZED</span>
+          <span class="sync-info__time">
+            {{ lastUpdated | date:'HH:mm:ss' }}
+          </span>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================= KPI CARDS ================= -->
+
+    <section class="kpi-grid">
+
+      <!-- Requests -->
+
+      <div class="kpi-card kpi-card--primary">
+
+        <div class="kpi-card__top">
+
+          <span class="kpi-card__label">
+            TOTAL REQUESTS
+          </span>
+
+          <div class="kpi-card__icon">
+            ↗
+          </div>
+
+        </div>
+
+        <div class="kpi-card__value">
+          {{ totalRequests | number }}
+        </div>
+
+        <div class="kpi-card__footer">
+          <span class="kpi-card__trend">↑ LIVE</span>
+          <span>ALL TIME REQUESTS</span>
+        </div>
+
+      </div>
+
+
+      <!-- Dataset -->
+
+      <div class="kpi-card">
+
+        <div class="kpi-card__top">
+
+          <span class="kpi-card__label">
+            DATASET
+          </span>
+
+          <div class="kpi-card__icon">
+            ◈
+          </div>
+
+        </div>
+
+        <div class="kpi-card__value kpi-card__value--text">
+          NASA-HTTP
+        </div>
+
+        <div class="kpi-card__footer">
+          <span>JUL 1995</span>
+          <span>ACCESS LOG DATASET</span>
+        </div>
+
+      </div>
+
+
+      <!-- System -->
+
+      <div class="kpi-card">
+
+        <div class="kpi-card__top">
+
+          <span class="kpi-card__label">
+            SYSTEM
+          </span>
+
+          <div class="kpi-card__icon">
+            ◉
+          </div>
+
+        </div>
+
+        <div class="kpi-card__value kpi-card__value--text">
+          KSC-WEB-01
+        </div>
+
+        <div class="kpi-card__footer">
+          <span class="online-text">
+            ● ONLINE
+          </span>
+
+          <span>NODE STATUS</span>
+        </div>
+
+      </div>
+
+
+      <!-- Last sync -->
+
+      <div class="kpi-card">
+
+        <div class="kpi-card__top">
+
+          <span class="kpi-card__label">
+            LAST SYNC
+          </span>
+
+          <div class="kpi-card__icon">
+            ◷
+          </div>
+
+        </div>
+
+        <div class="kpi-card__value kpi-card__value--text">
+          {{ lastUpdated | date:'HH:mm:ss' }}
+        </div>
+
+        <div class="kpi-card__footer">
+          <span>REAL TIME</span>
+          <span>UTC+05:30</span>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ================= MAIN CHARTS ================= -->
+
+    <section class="analytics-grid">
+
+
+      <!-- Daily Traffic -->
+
+      <article class="panel panel--large">
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="panel-header__eyebrow">
+              TRAFFIC / 01
+            </div>
+
+            <h2>
+              Daily Traffic
+            </h2>
+
+            <p>
+              Request volume across the selected period
+            </p>
+
+          </div>
+
+          <div class="panel-badge">
+            REQUESTS
+          </div>
+
+        </div>
+
+        <div class="chart-container">
+          <canvas #dailyTrafficCanvas></canvas>
+        </div>
+
+      </article>
+
+
+      <!-- Hourly Traffic -->
+
+      <article class="panel panel--large">
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="panel-header__eyebrow">
+              TRAFFIC / 02
+            </div>
+
+            <h2>
+              Hourly Distribution
+            </h2>
+
+            <p>
+              Request activity by hour of day
+            </p>
+
+          </div>
+
+          <div class="panel-badge panel-badge--cyan">
+            24H
+          </div>
+
+        </div>
+
+        <div class="chart-container">
+          <canvas #hourlyTrafficCanvas></canvas>
+        </div>
+
+      </article>
+
+
+      <!-- Status -->
+
+      <article class="panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="panel-header__eyebrow">
+              STATUS / 01
+            </div>
+
+            <h2>
+              Response Status
+            </h2>
+
+            <p>
+              HTTP response distribution
+            </p>
+
+          </div>
+
+          <div class="panel-icon">
+            ◉
+          </div>
+
+        </div>
+
+        <div class="chart-container chart-container--small">
+          <canvas #statusCanvas></canvas>
+        </div>
+
+      </article>
+
+
+      <!-- Errors -->
+
+      <article class="panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="panel-header__eyebrow">
+              ERRORS / 01
+            </div>
+
+            <h2>
+              Error Rate
+            </h2>
+
+            <p>
+              HTTP errors over time
+            </p>
+
+          </div>
+
+          <div class="panel-icon panel-icon--danger">
+            !
+          </div>
+
+        </div>
+
+        <div class="chart-container chart-container--small">
+          <canvas #errorRateCanvas></canvas>
+        </div>
+
+      </article>
+
+
+      <!-- ================= TOP PATHS ================= -->
+
+      <article class="panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="panel-header__eyebrow">
+              ENDPOINTS / 01
+            </div>
+
+            <h2>
+              Top Requested Paths
+            </h2>
+
+            <p>
+              Most frequently accessed resources
+            </p>
+
+          </div>
+
+          <div class="panel-badge">
+            TOP 8
+          </div>
+
+        </div>
+
+
+        <div class="data-table-wrapper">
+
+          <table class="data-table">
+
+            <thead>
+
+              <tr>
+                <th>#</th>
+                <th>PATH</th>
+                <th class="num">REQUESTS</th>
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              <tr *ngFor="let p of topPaths; let i = index">
+
+                <td class="rank">
+                  {{ (i + 1).toString().padStart(2, '0') }}
+                </td>
+
+                <td class="path-cell">
+                  <span class="path-indicator"></span>
+                  {{ p.path }}
+                </td>
+
+                <td class="num requests-cell">
+                  {{ p.requests | number }}
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </article>
+
+
+      <!-- ================= HOSTS ================= -->
+
+      <article class="panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="panel-header__eyebrow">
+              INFRASTRUCTURE / 01
+            </div>
+
+            <h2>
+              Top Hosts
+            </h2>
+
+            <p>
+              Server request distribution
+            </p>
+
+          </div>
+
+          <div class="panel-badge panel-badge--cyan">
+            TOP 8
+          </div>
+
+        </div>
+
+
+        <div class="data-table-wrapper">
+
+          <table class="data-table">
+
+            <thead>
+
+              <tr>
+                <th>#</th>
+                <th>HOST</th>
+                <th class="num">REQUESTS</th>
+                <th class="num">DATA</th>
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              <tr *ngFor="let h of topHosts; let i = index">
+
+                <td class="rank">
+                  {{ (i + 1).toString().padStart(2, '0') }}
+                </td>
+
+                <td class="host-cell">
+
+                  <span class="host-status"></span>
+
+                  {{ h.host }}
+
+                </td>
+
+                <td class="num requests-cell">
+                  {{ h.requests | number }}
+                </td>
+
+                <td class="num data-cell">
+                  {{ formatBytes(h.totalBytes) }}
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </article>
+
+    </section>
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer class="dashboard-footer">
+
+      <div>
+        WEB LOG TELEMETRY SYSTEM
+      </div>
+
+      <div class="footer-status">
+        <span></span>
+        DATA STREAM ACTIVE
+      </div>
+
+      <div>
+        API / LINGESH
+      </div>
+
+    </footer>
+
+    </ng-container>
+
+  </ng-container>
+
+  </div> <!-- End main-viewport -->
+
+</div> <!-- End dashboard-shell -->

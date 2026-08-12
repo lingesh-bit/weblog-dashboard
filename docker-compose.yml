@@ -1,0 +1,47 @@
+services:
+  # ClickHouse Database Service
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: weblog-clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    environment:
+      - CLICKHOUSE_DB=weblogs
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+    restart: unless-stopped
+
+  # .NET 10 Web API Backend Service
+  backend:
+    build:
+      context: ./Backend/WebLogAnalytics
+      dockerfile: Dockerfile
+    container_name: weblog-backend
+    ports:
+      - "5072:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__ClickHouse=Host=clickhouse;Port=8123;Database=weblogs;Username=default;Password=
+    depends_on:
+      - clickhouse
+    restart: unless-stopped
+
+  # Angular SSR Frontend Service
+  frontend:
+    build:
+      context: ./weblog-dashboard
+      dockerfile: Dockerfile
+    container_name: weblog-frontend
+    ports:
+      - "4200:4000"
+    environment:
+      - PORT=4000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  clickhouse_data:
